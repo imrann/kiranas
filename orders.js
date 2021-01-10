@@ -13,7 +13,7 @@ router.use(cors({ origin: true }));
 router.post('/createOrder/:transactionMode', async (req, res) => {
     const order = req.body;
     const orderProd = req.body['o_Products'];
-    var initiateOrderTransaction = true;
+    var initiateOrderTransaction = true; 
     
  
    
