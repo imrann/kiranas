@@ -13,32 +13,69 @@ router.use(cors({ origin: true }));
 router.post('/createOrder/:transactionMode', async (req, res) => {
     const order = req.body;
     const orderProd = req.body['o_Products'];
+
+
+    try {
+        const docRef = await admin.firestore().collection('orders').add(order)
+        const getData = await docRef.get()
+        const transactionData = await admin.firestore().collection('transactions').add(
+            {
+                "t_Date": getData.data()['o_Dop'],
+                "t_Mode": req.params.transactionMode,
+                "t_OrderID": docRef.id,
+                "t_Party": getData.data()['o_UserName'] + "(" + getData.data()['o_UserPhone'] + ")",
+                "t_Status": "Pending",
+                "t_TransactionAction": "Creadited",
+                "t_BillAmt": getData.data()['o_BillTotal']['totalAmt'],
+                "t_CreationDate": getData.data()['o_Dop'],
+                "t_UpdationDate": getData.data()['o_Dop']
+            }
+        )
+        
+        res.status(201).send();
+
+    } catch (error) {
+        console.error("Error adding orders: ", error);
+
+    res.status(500).send();
+
+}
+  
+    
+
+     
  
-    await admin.firestore().collection('orders').add(order).then(async function(docRef) {
-        const get = await docRef.get();
-        if (req.params.transactionMode === "COD") {
-             await admin.firestore().collection('transactions').add(
-                {
-                    "t_Date": get.data()['o_Dop'],
-                    "t_Mode" : req.params.transactionMode,
-                    "t_OrderID" :docRef.id ,
-                    "t_Party" :  get.data()['o_UserName'] + "("+get.data()['o_UserPhone']+")",
-                    "t_Status" : "Pending",
-                     "t_TransactionAction": "Creadited",
-                     "t_BillAmt": get.data()['o_BillTotal']['totalAmt'],
-                     "t_CreationDate":get.data()['createDate'],
-                    "t_UpdationDate": get.data()['createDate']
-                }
-            );
-        }
-       
+    //       admin.firestore().collection('orders').add(order).then(function(docRef) {
+           
+    //            docRef.get().then(function(getData) {
+    //               admin.firestore().collection('transactions').add(
+    //                 {
+    //                     "t_Date": getData.data()['o_Dop'],
+    //                     "t_Mode" : req.params.transactionMode,
+    //                     "t_OrderID" :docRef.id ,
+    //                     "t_Party" :  getData.data()['o_UserName'] + "("+getData.data()['o_UserPhone']+")",
+    //                     "t_Status" : "Pending",
+    //                      "t_TransactionAction": "Creadited",
+    //                      "t_BillAmt": getData.data()['o_BillTotal']['totalAmt'],
+    //                      "t_CreationDate":getData.data()['o_Dop'],
+    //                     "t_UpdationDate": getData.data()['o_Dop']
+    //                 }
+    //             );
+    //             res.status(201).send();
+    //          }).catch(function(error) {
+    //             console.error("Error adding document: ", error);
+    //             res.status(500).send();
+    //       });
+           
+         
+    //     res.status(201).send();
 
-      }).catch(function(error) {
-          console.error("Error adding document: ", error);
-          res.status(500).send();
-    });
 
-    res.status(201).send();
+    //   }).catch(function(error) {
+    //       console.error("Error adding document: ", error);
+    //       res.status(500).send();
+    // });
+
 });
 
 //get All orders

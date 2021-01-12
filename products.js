@@ -14,16 +14,23 @@ router.use(cors({ origin: true }));
  
 router.post('/createProduct', async (req, res) => {
 
-    const product = req.body;
-    await admin.firestore().collection('products').add(product).then(async function(docRef){
-        await admin.firestore().collection('products').doc(docRef.id).set({ "productID": docRef.id }, { merge: true }).then(async function () {
-            var docID = docRef.id;
-            await admin.firestore().collection('productsCount').doc("productsCount123").update({ productsCountList:admin.firestore.FieldValue.arrayUnion({ productID: docRef.id, productQty: product["productQty"] })});
-         });
-      }).catch(function(error) {
+    const product = req.body; 
+
+    try {
+        const docRef = await admin.firestore().collection('products').add(product)
+        const productsUpdatedData = await admin.firestore().collection('products').doc(docRef.id).set({ "productID": docRef.id }, { merge: true })
+       const  productsCountData = await admin.firestore().collection('productsCount').doc("productsCount123").update({ productsCountList:admin.firestore.FieldValue.arrayUnion({ productID: docRef.id, productQty: product["productQty"] })})
+        res.status(201).send();
+    } catch (error) {
         console.error("Error adding product: ", error);
-    });
-    res.status(201).send();
+
+        res.status(500).send();
+
+    }
+  
+    
+
+    
 });
 
 //get All Products

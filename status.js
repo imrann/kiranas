@@ -73,15 +73,23 @@ router.put("/updateOrderStatus/:orderID/:status/:est?", async (req, res) => {
 
     }     
    
-    await admin.firestore().collection('orders').doc(req.params.orderID).set({ "o_Status": o_Status, "o_TrackingStatus": o_TrackingStatus, "o_EstDelivaryTime": o_EstDelivaryTime }, { merge: true }).then(async function(){
-         
-        await admin.firestore().collection('transactions').where('t_OrderID', '==', req.params.orderID).get().then(async function (tdocRef) {
-            
-            admin.firestore().collection('transactions').doc(tdocRef.docs[0].id).set({"t_Status": t_Status,"t_UpdationDate":todaysDate},{merge:true});
-        })
-  
-     })
-    res.status(200).send();
+    try {
+        await  admin.firestore().collection('orders').doc(req.params.orderID).set({ "o_Status": o_Status, "o_TrackingStatus": o_TrackingStatus, "o_EstDelivaryTime": o_EstDelivaryTime }, { merge: true })
+
+        const tdocRef = await admin.firestore().collection('transactions').where('t_OrderID', '==', req.params.orderID).get()
+        
+        await admin.firestore().collection('transactions').doc(tdocRef.docs[0].id).set({"t_Status": t_Status,"t_UpdationDate":todaysDate},{merge:true})
+        res.status(200).send();
+    
+} catch (error) {
+    console.error("Error updating status: ", error);
+
+res.status(500).send();
+
+}
+   
+
+    
   });
  
 
