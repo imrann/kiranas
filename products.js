@@ -19,7 +19,7 @@ router.post('/createProduct', async (req, res) => {
     try {
         const docRef = await admin.firestore().collection('products').add(product)
         const productsUpdatedData = await admin.firestore().collection('products').doc(docRef.id).set({ "productID": docRef.id }, { merge: true })
-       const  productsCountData = await admin.firestore().collection('productsCount').doc("productsCount123").update({ productsCountList:admin.firestore.FieldValue.arrayUnion({ productID: docRef.id, productQty: product["productQty"] })})
+      // const  productsCountData = await admin.firestore().collection('productsCount').doc("productsCount123").update({ productsCountList:admin.firestore.FieldValue.arrayUnion({ productID: docRef.id, productQty: product["productQty"] })})
         res.status(201).send();
     } catch (error) {
         console.error("Error adding product: ", error);
@@ -122,8 +122,8 @@ router.get("/getAllproductCategory", async (req, res) => {
 
 router.put("/updateProductCategory/:productCategory", async (req, res) => {
     await
-        admin.firestore().collection('productCategory').doc('productCategory123').update({
-            productCategory: admin.firestore.FieldValue.arrayUnion(req.params.productCategory)
+        admin.firestore().collection('productCategory').doc('productCategoryList').update({
+            productCategoryList : admin.firestore.FieldValue.arrayUnion(req.params.productCategory)
         });
     res.status(200).send();
 });
