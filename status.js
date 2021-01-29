@@ -22,69 +22,73 @@ var todaysDate =  date + "-" + month + "-" + year;
 
 
 router.put("/updateOrderStatus/:orderID/:status/:est?", async (req, res) => {
-    var o_TrackingStatus;
-    var o_Status;
-    var o_EstDelivaryTime;
+    var oTrackingStatus;
+    var oStatus;
+    var oEstDelivaryTime;
     var t_Status;
 
 
     switch(req.params.status) {
             case "Placed":
-                o_TrackingStatus = "Placed";
-                o_Status = "Open";
-            o_EstDelivaryTime = "will be given by owner after accepting the order";
+                oTrackingStatus = "Placed";
+                oStatus = "Open";
+            oEstDelivaryTime = "Waiting for order acceptance";
             t_Status = "Pending";
              break;
             case "Accepted":
-                o_TrackingStatus = "Accepted";
-                o_Status = "Open";
-            o_EstDelivaryTime = req.params.est;
+                oTrackingStatus = "Accepted";
+                oStatus = "Open";
+            oEstDelivaryTime = req.params.est;
             t_Status = "Pending";
             break;
             case "Out for Delivary":
-                o_TrackingStatus = "Out for Delivary";
-                o_Status = "Open";
-            o_EstDelivaryTime = "will be delivered today ,Please call owner";
+                oTrackingStatus = "Out for Delivary";
+                oStatus = "Open";
+            oEstDelivaryTime = "Will be delivered today ,Please call owner";
             t_Status = "Pending";
             break;
             case "Delivered":
-                o_TrackingStatus = "Delivered";
-                o_Status = "Delivered";
-            o_EstDelivaryTime = "";
+                oTrackingStatus = "Delivered";
+                oStatus = "Delivered";
+            oEstDelivaryTime = "";
             t_Status = "Completed";
             break;
             case "Cancelled by owner":
-                o_TrackingStatus = "Cancelled by owner";
-                o_Status = "Cancelled";
-            o_EstDelivaryTime = "";
+                oTrackingStatus = "Cancelled by owner";
+                oStatus = "Cancelled";
+            oEstDelivaryTime = "";
             t_Status = "Cancelled";
             break;
             case "Cancelled by user":
-                o_TrackingStatus = "Cancelled by user";
-                o_Status = "Cancelled";
-            o_EstDelivaryTime = "";
+                oTrackingStatus = "Cancelled by user";
+                oStatus = "Cancelled";
+            oEstDelivaryTime = "";
             t_Status = "Cancelled";
                 break;
         default:
-            o_TrackingStatus = "c";
-            o_Status = "a";
-            o_EstDelivaryTime = "d";
+            oTrackingStatus = "c";
+            oStatus = "a";
+            oEstDelivaryTime = "d";
             t_Status = "";
 
     }     
    
     try {
-        await  admin.firestore().collection('orders').doc(req.params.orderID).set({ "o_Status": o_Status, "o_TrackingStatus": o_TrackingStatus, "o_EstDelivaryTime": o_EstDelivaryTime }, { merge: true })
+        let message = "status cancelled";
+
+        await  admin.firestore().collection('orders').doc(req.params.orderID).set({ "oStatus": oStatus, "oTrackingStatus": oTrackingStatus, "oEstDelivaryTime": oEstDelivaryTime }, { merge: true })
 
         const tdocRef = await admin.firestore().collection('transactions').where('t_OrderID', '==', req.params.orderID).get()
         
         await admin.firestore().collection('transactions').doc(tdocRef.docs[0].id).set({"t_Status": t_Status,"t_UpdationDate":todaysDate},{merge:true})
-        res.status(200).send();
+        res.status(200).send(JSON.stringify({message,result:""}));
     
-} catch (error) {
+    } catch (error) {
+        let message = "error cancelling status";
+
     console.error("Error updating status: ", error);
 
-res.status(500).send();
+res.status(500).send(JSON.stringify({message,result:""}));
 
 }
    

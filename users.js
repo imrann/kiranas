@@ -25,21 +25,36 @@ router.get('/getAllUsers', async (req, res) => {
 //http://localhost:5001/kiranas-c082f/us-central1/user/<userID>
 
 router.get("/getUserById/:id", async (req, res) => {
-    const snapshot = await
-    admin.firestore().collection('users').doc(req.params.id).get();
-    const userID = snapshot.id;
-    const userData = snapshot.data();
-    res.status(200).send(JSON.stringify({userID,userData}));
+    try {
+        const snapshot = await
+        admin.firestore().collection('users').doc(req.params.id).get();
+        let message = "getUserById";
+        const userID = snapshot.id;
+        const userData = snapshot.data();
+        res.status(200).send(JSON.stringify({message,userData}));
+    } catch (error) {
+        console.error("Error getting User: ", error);
+        let message = "Error getting User";
+        res.status(500).send(JSON.stringify({message,userData:null}));
+    }
+   
 })
   
 //create a new user
 //http://localhost:5001/kiranas-c082f/us-central1/user
 
-router.post('/createUser', async (req, res) => {
+router.post('/createUser/:userID', async (req, res) => {
     const user = req.body;
-    console.log(req.body['userPhone']);
-     await admin.firestore().collection('users').add(user);
-    res.status(201).send();
+    try {
+        await admin.firestore().collection('users').doc(req.params.userID).set(user);
+        let message = "User Created"
+        res.status(201).send(JSON.stringify({message,userData:user}));
+    } catch (error){
+        console.error("Error adding User: ", error);
+        let message = "Error Creating User";
+        res.status(500).send(JSON.stringify({message,userData:null}));
+  }
+    
 });
   
 //check if user already present in the system
@@ -71,8 +86,18 @@ router.get("/isUserPresent/:userPhoneNumber", async (req, res) => {
 
 router.put("/updateAddress/:id", async (req, res) => {
     const body = req.body;
-    await 
+
+    try {
+        await 
         admin.firestore().collection('users').doc(req.params.id).set({"userAddress": body},{merge:true});
+        let message = "Address Updated"
+        res.status(201).send(JSON.stringify({message,userData:body}));
+    } catch (error){
+        console.error("Error Updating Address: ", error);
+        let message = "Error Updating Address";
+        res.status(500).send(JSON.stringify({message,userData:null}));
+  }
+    
     res.status(200).send();
   });
 

@@ -7,6 +7,19 @@ const { merge } = require('./users');
  
   
 router.use(cors({ origin: true }));
+
+let date_ob = new Date();
+
+// adjust 0 before single digit date
+let date = ("0" + date_ob.getDate()).slice(-2);
+
+// current month
+let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
+
+// current year
+let year = date_ob.getFullYear();
+ 
+var todaysDate =  date + "-" + month + "-" + year;
  
   
 //create a new product
@@ -15,6 +28,7 @@ router.use(cors({ origin: true }));
 router.post('/createProduct', async (req, res) => {
 
     const product = req.body; 
+    
 
     try {
         const docRef = await admin.firestore().collection('products').add(product)
@@ -37,14 +51,23 @@ router.post('/createProduct', async (req, res) => {
 //http://localhost:5001/kiranas-c082f/us-central1/kiranas/api/products/getAllProducts
 
 router.get('/getAllProducts', async (req, res) => {
-    const snapshot = await admin.firestore().collection('products').get();
-    let products = [];
-    snapshot.forEach(doc => {   
-      let productID = doc.id;
-      let productData = doc.data();
-      products.push({productID,productData});
-    });
-    res.status(200).send(JSON.stringify(products));
+    try {
+        const snapshot = await admin.firestore().collection('products').get();
+        let products = [];
+        let message = "getAllProducts";
+
+        snapshot.forEach(doc => {   
+          let productID = doc.id;
+          let productData = doc.data();
+          products.push({productID,productData});
+        });
+        res.status(200).send(JSON.stringify({message,result:products}));
+    } catch (error) {
+        console.error("Error getting User: ", error);
+        let message = "Error getting Products";
+        res.status(500).send(JSON.stringify({message,result:null}));
+    }
+  
 });
 
 //discontinue or continue products
@@ -68,37 +91,31 @@ router.put("/updateProduct/:id", async (req, res) => {
 });
   
 
+
 router.get("/getProductByName/:productName/:productLimit", async (req, res) => {
  
-    const snapshot = await
+    try {
+        const snapshot = await
         admin.firestore().collection('products').orderBy('productName').startAt(req.params.productName.toUpperCase()).endAt(req.params.productName.toUpperCase() + "\uf8ff").get();
-    //where('productName', '==', req.params.productName)
-    let products = [];
+        let products = [];
+        let message = "getProductByName";
+
     snapshot.forEach(doc => {
         let productID = doc.id;
         let productData = doc.data();
         products.push({ productID, productData });
     });
-    res.status(200).send(JSON.stringify(products));
+    res.status(200).send(JSON.stringify({message,result:products}));
+    } catch (error) {
+        console.error("Error getting Product by name: ", error);
+        let message = "Error getting Products";
+        res.status(500).send(JSON.stringify({message,result:null}));
+    }
+   
 });
 
 
-//search product by product name
-//http://localhost:5001/kiranas-c082f/us-central1/kiranas/api/products/getProductByName/<productname>/<productLimit>
 
-router.get("/getProductByName/:productName/:productLimit", async (req, res) => {
- 
-    const snapshot = await
-        admin.firestore().collection('products').orderBy('productName').startAt(req.params.productName.toUpperCase()).endAt(req.params.productName.toUpperCase() + "\uf8ff").get();
-    //where('productName', '==', req.params.productName)
-    let products = [];
-    snapshot.forEach(doc => {
-        let productID = doc.id;
-        let productData = doc.data();
-        products.push({ productID, productData });
-    });
-    res.status(200).send(JSON.stringify(products));
-});
   
  
   //getAll product category
