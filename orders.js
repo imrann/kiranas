@@ -131,6 +131,25 @@ router.get('/getOrdersByType/:userId/:type', async (req, res) => {
     }
 });
 
+
+router.get('/getOrdersOnlyByType/:type', async (req, res) => {
+     
+    try {
+        const snapshot =await admin.firestore().collection('orders').where('oStatus','==',req.params.type).get();
+        let orders = [];
+        let message = "getOrdersByType";
+          snapshot.forEach(doc => {   
+            
+            let orderData = doc.data();
+            orders.push({orderData});
+          });
+        res.status(200).send(JSON.stringify({message,orders}));
+    } catch (error) {
+        console.error("Error getting orders: ", error);
+        let message = "Error getting orders";
+        res.status(500).send(JSON.stringify({message,userData:null}));
+    }
+});
  
 
 module.exports = router;

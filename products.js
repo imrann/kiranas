@@ -116,22 +116,29 @@ router.get("/getProductByName/:productName/:productLimit", async (req, res) => {
 
 
 
+
+
   
  
-  //getAll product category
+  //categoryFilterName
   //http://localhost:5001/kiranas-c082f/us-central1/kiranas/api/products/getAllproductCategory
 
-router.get("/getAllproductCategory", async (req, res) => {
- 
+router.get("/getAllproductCategory/:categoryFilterName", async (req, res) => {
+    try {       
+    let message = "success getting productFilterList";
     const snapshot = await
-        admin.firestore().collection('productCategory').get();
-    //where('productName', '==', req.params.productName)
-    let productCategory = [];
-    snapshot.forEach(doc => {
-        let productCategoryData = doc.data();
-        productCategory.push(productCategoryData);
-    });
-    res.status(200).send(productCategory[0]['productCategory']);
+            admin.firestore().collection('productCategory').doc(req.params.categoryFilterName).get();
+         const productFilterList = snapshot.data();
+         
+       
+        res.status(200).send(JSON.stringify({message, productFilterList}));
+
+    } catch (error) {
+        console.error("Error getting productFilterList", error);
+        let message = "Error getting productFilterList";
+        res.status(500).send(JSON.stringify({message,productFilterList:null}));
+    }
+
 });
 
 //update product category
@@ -148,19 +155,53 @@ router.put("/updateProductCategory/:productCategory", async (req, res) => {
 
 //get product by productCategory
 //http://localhost:5001/kiranas-c082f/us-central1/kiranas/api/products/updateProductCategory/<productCategory>
-router.get("/getProductByCategory/:productCategory", async (req, res) => {
+router.get("/getProductByCategory/:productCategory?/:productDiscount?", async (req, res) => { 
  
-    const snapshot = await
-        admin.firestore().collection('products').where('productCategory','==',req.params.productCategory).get();
-    //where('productName', '==', req.params.productName)
-    let products= [];
-    snapshot.forEach(doc => {
-        let productData = doc.data();
-        products.push(productData);
-    });
+   
+
+    try {
+        let message = "getAllProducts";
+
+        var ids = req.params.productCategory.split(',');
+        console.log(ids);
+         
+        var filterDiscount = "0";
+        if (req.params.productDiscount !== "null") {
+            filterDiscount = req.params.productDiscount;
+        }
+        var query = admin.firestore().collection('products')
+
+        if (req.params.productCategory === "null" ) {
+            query = query.where('productOffPercentage', '>=', filterDiscount);
+        } else {
+            query = query.where('productCategory', 'in', ids)
+            .where('productOffPercentage', '>=', filterDiscount);
+        }
+     
+        const snapshot = await query.get();
+         let products= [];
+        snapshot.forEach(doc => {
+            let productID = doc.id;
+            let productData = doc.data();
+            products.push({productID, productData});
+        });
+    
+    
+        res.status(200).send(JSON.stringify({message,result:products}));
+    } catch (error) {
+        console.error("Error getting Products: ", error);
+        let message = "Error getting Products";
+        res.status(500).send(JSON.stringify({message,result:null}));
+    }
 
 
-    res.status(200).send(JSON.stringify(products));
+
+
+
+  
+ 
+
+  
 });
 
 
