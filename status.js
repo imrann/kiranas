@@ -26,7 +26,7 @@ router.put("/updateOrderStatus/:orderID/:status/:est?", async (req, res) => {
     var oStatus;
     var oEstDelivaryTime;
     var t_Status;
-
+ 
 
     switch(req.params.status) {
             case "Placed":
@@ -41,8 +41,8 @@ router.put("/updateOrderStatus/:orderID/:status/:est?", async (req, res) => {
             oEstDelivaryTime = req.params.est;
             t_Status = "Pending";
             break;
-            case "Out for Delivary":
-                oTrackingStatus = "Out for Delivary";
+            case "Out for Delivery":
+                oTrackingStatus = "Out for Delivery";
                 oStatus = "Open";
             oEstDelivaryTime = "Will be delivered today ,Please call owner";
             t_Status = "Pending";
@@ -76,7 +76,7 @@ router.put("/updateOrderStatus/:orderID/:status/:est?", async (req, res) => {
     try {
         let message = "status cancelled";
 
-        await  admin.firestore().collection('orders').doc(req.params.orderID).set({ "oStatus": oStatus, "oTrackingStatus": oTrackingStatus, "oEstDelivaryTime": oEstDelivaryTime }, { merge: true })
+        await  admin.firestore().collection('orders').doc(req.params.orderID).set({ "oStatus": oStatus, "oTrackingStatus": oTrackingStatus, "oEstDelivaryTime": oEstDelivaryTime ,"oUpdateDate":todaysDate}, { merge: true })
 
         const tdocRef = await admin.firestore().collection('transactions').where('t_OrderID', '==', req.params.orderID).get()
         

@@ -76,18 +76,67 @@ router.get('/getAllProducts', async (req, res) => {
 router.put("/deleteProduct/:id", async (req, res) => {
     const actionOnProduct = req.body["discontinue"];
 
-    await 
+    try {
+        let message = "deleteProduct";
+        await 
         admin.firestore().collection('products').doc(req.params.id).set({"discontinue": actionOnProduct},{merge:true});
-    res.status(200).send();
+    res.status(200).send(JSON.stringify({message,result:""}));
+     } catch (error) {
+        console.error("Error deleting product: ", error);
+        let message = "Error deleting product";
+        res.status(500).send(JSON.stringify({message,result:null}));
+    }
+
+
+   
+
+  
 });
   
 //upfate product by productID
 //http://localhost:5001/kiranas-c082f/us-central1/kiranas/api/products/updateProduct/<productID>
 router.put("/updateProduct/:id", async (req, res) => {
-    const body = req.body;
-     await 
+
+
+    const body = req.body; 
+    
+
+    try {
+        await 
         admin.firestore().collection('products').doc(req.params.id).set(body,{merge:true});
-    res.status(200).send();
+        res.status(201).send();
+    } catch (error) {
+        console.error("Error adding product: ", error);
+
+        res.status(500).send();
+
+    }
+});
+
+
+//getProductByID
+router.get("/getProductByID/:productID", async (req, res) => {
+ 
+
+    try {
+        const snapshot = await
+        admin.firestore().collection('products').doc(req.params.productID).get();
+        let message = "getProductByID";
+        let products = [];
+        const productID = snapshot.id;
+        const productData = snapshot.data();
+        products.push({ productID, productData });
+
+        res.status(200).send(JSON.stringify({message,result:products}));
+    } catch (error) {
+        console.error("Error getting product: ", error);
+        let message = "Error getting product";
+        res.status(500).send(JSON.stringify({message,result:null}));
+    }
+
+
+    
+   
 });
   
 

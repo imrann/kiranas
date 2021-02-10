@@ -39,7 +39,7 @@ router.post('/createOrder/:transactionMode', async (req, res) => {
                 "t_Date": todaysDate,
                 "t_Mode": req.params.transactionMode,
                 "t_OrderID": docRef.id,
-                "t_Party": getData.data()['oUserName'] + "(" + getData.data()['oUserPhone'] + ")",
+                "t_Party": getData.data()['oUserName'] +"  "+"(" + getData.data()['oUserPhone'] + ")",
                 "t_Status": "Pending",
                 "t_TransactionAction": "Creadited",
                 "t_BillAmt": getData.data()['oBillTotal']['totalAmt'],

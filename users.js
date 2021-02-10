@@ -56,6 +56,43 @@ router.post('/createUser/:userID', async (req, res) => {
   }
     
 });
+
+
+//save device token forn FCM
+router.post('/saveDeviceToken', async (req, res) => {
+    const tokenDetails = req.body;
+
+    try {
+        await admin.firestore().collection('deviceTokens').doc("customerDeviceToken").add(tokenDetails);
+        let message = "token Added"
+        res.status(201).send(JSON.stringify({message}));
+    } catch (error){
+        console.error("Error adding token: ", error);
+        let message = "Error adding token";
+        res.status(500).send(JSON.stringify({message}));
+  }
+    
+});
+
+router.get('/getDeviceToken/:userID', async (req, res) => {
+     
+    try {
+        const snapshot=  await admin.firestore().collection('deviceTokens').where('tokenDetails.userID', '==', req.params.userID).get();
+        let message = "getDeviceToken"
+        let token = [];
+        snapshot.forEach(doc => {
+          let docID = doc.id;
+          let tokenData = doc.data();
+          token.push({docID,tokenData});
+        });
+        res.status(201).send(JSON.stringify({message,token}));
+    } catch (error){
+        console.error("Error getting token: ", error);
+        let message = "Error getting token";
+        res.status(500).send(JSON.stringify({message,token:null}));
+  }
+    
+});
   
 //check if user already present in the system
 //http://localhost:5001/kiranas-c082f/us-central1/user/isUserPresent/<userPhoneNumber>
