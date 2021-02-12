@@ -13,7 +13,7 @@ router.use(cors({ origin: true }));
 router.get('/getAllTransactions', async (req, res) => {
  
     try {
-        const snapshot =await admin.firestore().collection('transactions').orderBy('t_UpdationDate',).get();
+        const snapshot =await admin.firestore().collection('transactions').orderBy('t_UpdationDate').get();
         let transactions = [];
         let message = "getAllTransactions";
           snapshot.forEach(doc => {   

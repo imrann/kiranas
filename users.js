@@ -39,6 +39,41 @@ router.get("/getUserById/:id", async (req, res) => {
     }
    
 })
+
+//check if user is admin
+
+router.get("/isUserAdmin/:phoneNumber", async (req, res) => {
+    let message;
+    let adminUserData;
+    let admins = [];
+    try {
+        const snapshot = await
+        admin.firestore().collection('admin').where("phoneNumber", "==", req.params.phoneNumber).get();
+        
+        snapshot.forEach(doc => {
+         
+          let adminsDetails = doc.data();
+          admins.push(adminsDetails);
+        });
+
+        if (admins.length !== 0) {
+            message = true;
+            adminUserData = admins;
+        } else {
+            message = false;
+            adminUserData = null;
+        }
+     
+        res.status(200).send(JSON.stringify({message,adminUserData}));
+    } catch (error) {
+        console.error("Error checking isUserAdmin: ", error);
+        let message = "Error checking isUserAdmin";
+        res.status(500).send(JSON.stringify({message,adminUserData:null}));
+    }
+   
+})
+
+
   
 //create a new user
 //http://localhost:5001/kiranas-c082f/us-central1/user
@@ -59,11 +94,11 @@ router.post('/createUser/:userID', async (req, res) => {
 
 
 //save device token forn FCM
-router.post('/saveDeviceToken', async (req, res) => {
+router.post('/saveDeviceToken/:tokenCategory', async (req, res) => {
     const tokenDetails = req.body;
 
     try {
-        await admin.firestore().collection('deviceTokens').doc("customerDeviceToken").add(tokenDetails);
+        await admin.firestore().collection(req.params.tokenCategory).add(tokenDetails);
         let message = "token Added"
         res.status(201).send(JSON.stringify({message}));
     } catch (error){

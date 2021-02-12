@@ -135,7 +135,7 @@ router.get('/getOrdersByType/:userId/:type', async (req, res) => {
 router.get('/getOrdersOnlyByType/:type', async (req, res) => {
      
     try {
-        const snapshot =await admin.firestore().collection('orders').where('oStatus','==',req.params.type).get();
+        const snapshot =await admin.firestore().collection('orders').where('oStatus','==',req.params.type).orderBy('oUpdateDate','desc').get();
         let orders = [];
         let message = "getOrdersByType";
           snapshot.forEach(doc => {   
