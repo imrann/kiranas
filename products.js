@@ -210,21 +210,24 @@ router.get("/getProductByCategory/:productCategory?/:productDiscount?", async (r
 
     try {
         let message = "getAllProducts";
-
+        var query = admin.firestore().collection('products')
         var ids = req.params.productCategory.split(',');
         console.log(ids);
          
-        var filterDiscount = "0";
+        var filterDiscount = 0;
         if (req.params.productDiscount !== "null") {
             filterDiscount = req.params.productDiscount;
         }
-        var query = admin.firestore().collection('products')
+        
 
-        if (req.params.productCategory === "null" ) {
-            query = query.where('productOffPercentage', '>=', filterDiscount);
+        if (req.params.productCategory === "null") {
+            console.log("filterDiscount " + filterDiscount);
+           
+
+            query = query.where('productOffPercentage', '>=', parseInt(filterDiscount)).orderBy('productOffPercentage', 'asc');
         } else {
             query = query.where('productCategory', 'in', ids)
-            .where('productOffPercentage', '>=', filterDiscount);
+            .where('productOffPercentage', '>=', parseInt(filterDiscount)).orderBy('productOffPercentage', 'asc');
         }
      
         const snapshot = await query.get();
@@ -242,15 +245,7 @@ router.get("/getProductByCategory/:productCategory?/:productDiscount?", async (r
         let message = "Error getting Products";
         res.status(500).send(JSON.stringify({message,result:null}));
     }
-
-
-
-
-
-  
  
-
-  
 });
 
 

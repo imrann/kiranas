@@ -7,18 +7,19 @@ const admin = require('firebase-admin');
   
 router.use(cors({ origin: true }));
 
-let date_ob = new Date();
+// let date_ob = new Date();
 
-// adjust 0 before single digit date
-let date = ("0" + date_ob.getDate()).slice(-2);
+// // adjust 0 before single digit date
+// let date = ("0" + date_ob.getDate()).slice(-2);
 
-// current month
-let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
+// // current month
+// let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
 
-// current year
-let year = date_ob.getFullYear();
+// // current year
+// let year = date_ob.getFullYear();
  
-var todaysDate =  date + "-" + month + "-" + year;
+// var todaysDate =  date + "-" + month + "-" + year;
+
  
 //create a new order and transaction
 //http://localhost:5001/kiranas-c082f/us-central1/kiranas/api/orders/createOrder/<transactionMode>
@@ -26,7 +27,8 @@ var todaysDate =  date + "-" + month + "-" + year;
 router.post('/createOrder/:transactionMode', async (req, res) => {
     const order = req.body;
     const orderProd = req.body['oProducts'];
-
+    const now = new Date()  
+    var todaysDate = Math.round(now.getTime())
 
     try {
         let message = "order created";
@@ -36,7 +38,7 @@ router.post('/createOrder/:transactionMode', async (req, res) => {
         const productsUpdatedData = await admin.firestore().collection('orders').doc(docRef.id).set({ "orderID": docRef.id }, { merge: true })
         const transactionData = await admin.firestore().collection('transactions').add(
             {
-                "t_Date": todaysDate,
+                 
                 "t_Mode": req.params.transactionMode,
                 "t_OrderID": docRef.id,
                 "t_Party": getData.data()['oUserName'] +"  "+"(" + getData.data()['oUserPhone'] + ")",
@@ -115,7 +117,7 @@ router.get('/getAllOrders', async (req, res) => {
 router.get('/getOrdersByType/:userId/:type', async (req, res) => {
      
     try {
-        const snapshot =await admin.firestore().collection('orders').where('oUserID','==',req.params.userId).where('oStatus','==',req.params.type).get();
+        const snapshot =await admin.firestore().collection('orders').where('oUserID','==',req.params.userId).where('oStatus','==',req.params.type).orderBy('oUpdateDate','desc').get();
         let orders = [];
         let message = "getOrdersByType";
           snapshot.forEach(doc => {   
@@ -129,6 +131,284 @@ router.get('/getOrdersByType/:userId/:type', async (req, res) => {
         let message = "Error getting orders";
         res.status(500).send(JSON.stringify({message,userData:null}));
     }
+});
+
+
+
+router.get("/getOrderByFilter/dop/:dop?/dod/:dod?/doc/:doc?/trackingStatus/:trackingStatus?/status/:status", async (req, res) => { 
+
+    var dop = parseInt(req.params.dop);
+    var dopPlusOne = parseInt(req.params.dop) + 86400000;
+
+    var dod = parseInt(req.params.dod);
+    var dodPlusOne = parseInt(req.params.dod) + 86400000;
+
+    var doc = parseInt(req.params.doc);
+    var docPlusOne = parseInt(req.params.doc) + 86400000;
+
+    try {
+        let message = "getOrderByFilter";
+
+ 
+        var query = admin.firestore().collection('orders')
+
+
+        
+        switch (req.params.status) {
+            case "Open":       
+            console.log("here11");
+
+                if (req.params.dop !== "null" && req.params.trackingStatus !== "null") { 
+                    console.log("here1");
+                    query = query.where('oDop', '>=', dop).where('oDop', '<', dopPlusOne).where('oTrackingStatus', '==', req.params.trackingStatus).where('oStatus', '==', req.params.status).orderBy('oDop', 'desc');
+                } else if ((req.params.dop !== "null")  && (req.params.trackingStatus === "null")) {
+                    query = query.where('oDop', '>=', dop).where('oDop', '<', dopPlusOne).where('oStatus', '==', req.params.status).orderBy('oDop', 'desc');
+                }else   {
+                   query = query.where('oTrackingStatus', '==', req.params.trackingStatus).where('oStatus', '==', req.params.status).orderBy('oDop', 'desc');
+               }           
+                
+                break;
+            case "Delivered":
+                console.log("here2");
+
+                if ((req.params.dop !== "null") && (req.params.dod !== "null")) {
+                    console.log("here21");
+                   query = query.where('oUpdateDate', '>=', dod).where('oUpdateDate', '<', dodPlusOne).where('oStatus', '==', req.params.status).orderBy('oUpdateDate', 'desc');
+                } else if ((req.params.dop !== "null") && (req.params.dod === "null")) {
+                    console.log("here22");
+                     query = query.where('oStatus', '==', req.params.status).orderBy('oUpdateDate', 'desc');
+                } else {
+                    console.log("here23");
+                     query = query.where('oUpdateDate', '>=', dod).where('oUpdateDate', '<', dodPlusOne).where('oStatus', '==', req.params.status).orderBy('oUpdateDate', 'desc');
+               }
+                
+                break;
+            case "Cancelled":
+               
+                console.log("here3");
+                   if ((req.params.dop !== "null")  && (req.params.doc !== "null")) {
+                       query =query.where('oUpdateDate', '>=', doc).where('oUpdateDate', '<', docPlusOne).where('oStatus', '==', req.params.status).orderBy('oUpdateDate', 'desc');
+                    } else if ((req.params.dop !== "null")  && (req.params.doc === "null")) {
+                        query = query.where('oStatus', '==', req.params.status).orderBy('oUpdateDate', 'desc');
+                    }else   {
+                       query =  query.where('oUpdateDate', '>=', doc).where('oUpdateDate', '<', docPlusOne).where('oStatus', '==', req.params.status).orderBy('oUpdateDate', 'desc');
+                   }
+                   break;
+        
+            default:
+                break;
+       }
+        
+       const snapshot = await query.get();
+
+
+
+       switch (req.params.status) {
+        case "Open": {
+         let orders= [];
+         snapshot.forEach(docu => {
+              let orderData = docu.data();
+              orders.push({orderData});
+         });
+     
+     
+         res.status(200).send(JSON.stringify({message,orders}));
+     }
+             
+              
+         break;
+        case "Delivered": {
+         let orders= []; 
+         snapshot.forEach(docu => {
+             let orderData= docu.data();
+             if ((req.params.dop !== "null")) {
+                 if ((orderData['oDop'] >= dop) &&  (orderData['oDop'] < dopPlusOne)) {
+                     orders.push({ orderData });
+  
+                 } 
+             } else {
+                 orders.push({ orderData });
+             }
+            
+             
+         });
+         res.status(200).send(JSON.stringify({message,orders}));
+     }
+        
+         break;
+        case "Cancelled": {
+         let orders= [];
+         snapshot.forEach(docu => {
+             let orderData = docu.data();
+             if ((req.params.dop !== "null")) {
+                 if ((orderData['oDop'] >= dop) && (orderData['oDop'] < dopPlusOne)) {
+                     orders.push({orderData});
+                 }
+             }else {
+                 orders.push({orderData});
+
+             }
+             
+            
+             
+         });
+         res.status(200).send(JSON.stringify({message,orders}));
+         
+     }
+        
+            break;
+ 
+     default:
+         break;
+}
+    
+     
+ 
+    } catch (error) {
+        console.error("Error getting Orders: ", error);
+        let message = "Error getting Orders";
+        res.status(500).send(JSON.stringify({message,orders:null}));
+    }
+ 
+ 
+});
+
+
+router.get("/getOrderByFilterByUserID/dop/:dop?/dod/:dod?/doc/:doc?/trackingStatus/:trackingStatus?/status/:status/userId/:userId", async (req, res) => { 
+ 
+    var dop = parseInt(req.params.dop);
+    var dopPlusOne = parseInt(req.params.dop) + 86400000;
+
+    var dod = parseInt(req.params.dod);
+    var dodPlusOne = parseInt(req.params.dod) + 86400000;
+
+    var doc = parseInt(req.params.doc);
+    var docPlusOne = parseInt(req.params.doc) + 86400000;
+
+    try {
+        let message = "getOrderByFilterByUserID";
+
+ 
+        var query = admin.firestore().collection('orders')
+
+
+        
+        switch (req.params.status) {
+            case "Open":       
+            console.log("here11");
+
+                if (req.params.dop !== "null" && req.params.trackingStatus !== "null") { 
+                    console.log("here1");
+                    query = query.where('oDop', '>=', dop).where('oDop', '<', dopPlusOne).where('oTrackingStatus', '==', req.params.trackingStatus).where('oStatus', '==', req.params.status).orderBy('oDop', 'desc');
+                } else if ((req.params.dop !== "null")  && (req.params.trackingStatus === "null")) {
+                    query = query.where('oDop', '>=', dop).where('oDop', '<', dopPlusOne).where('oStatus', '==', req.params.status).orderBy('oDop', 'desc');
+                }else   {
+                   query = query.where('oTrackingStatus', '==', req.params.trackingStatus).where('oStatus', '==', req.params.status).orderBy('oDop', 'desc');
+               }           
+                
+                break;
+            case "Delivered":
+                console.log("here2");
+
+                if ((req.params.dop !== "null") && (req.params.dod !== "null")) {
+                    console.log("here21");
+                   query = query.where('oUpdateDate', '>=', dod).where('oUpdateDate', '<', dodPlusOne).where('oStatus', '==', req.params.status).orderBy('oUpdateDate', 'desc');
+                } else if ((req.params.dop !== "null") && (req.params.dod === "null")) {
+                    console.log("here22");
+                     query = query.where('oStatus', '==', req.params.status).orderBy('oUpdateDate', 'desc');
+                } else {
+                    console.log("here23");
+                     query = query.where('oUpdateDate', '>=', dod).where('oUpdateDate', '<', dodPlusOne).where('oStatus', '==', req.params.status).orderBy('oUpdateDate', 'desc');
+               }
+                
+                break;
+            case "Cancelled":
+               
+                console.log("here3");
+                   if ((req.params.dop !== "null")  && (req.params.doc !== "null")) {
+                       query =query.where('oUpdateDate', '>=', doc).where('oUpdateDate', '<', docPlusOne).where('oStatus', '==', req.params.status).orderBy('oUpdateDate', 'desc');
+                    } else if ((req.params.dop !== "null")  && (req.params.doc === "null")) {
+                        query = query.where('oStatus', '==', req.params.status).orderBy('oUpdateDate', 'desc');
+                    }else   {
+                       query =  query.where('oUpdateDate', '>=', doc).where('oUpdateDate', '<', docPlusOne).where('oStatus', '==', req.params.status).orderBy('oUpdateDate', 'desc');
+                   }
+                   break;
+        
+            default:
+                break;
+       }
+        
+       const snapshot = await query.where('oUserID', '==', req.params.userId).get();
+
+
+
+       switch (req.params.status) {
+           case "Open": {
+            let orders= [];
+            snapshot.forEach(docu => {
+                 let orderData = docu.data();
+                 orders.push({orderData});
+            });
+        
+        
+            res.status(200).send(JSON.stringify({message,orders}));
+        }
+                
+                 
+            break;
+           case "Delivered": {
+            let orders= []; 
+            snapshot.forEach(docu => {
+                let orderData= docu.data();
+                if ((req.params.dop !== "null")) {
+                    if ((orderData['oDop'] >= dop) &&  (orderData['oDop'] < dopPlusOne)) {
+                        orders.push({ orderData });
+     
+                    } 
+                } else {
+                    orders.push({ orderData });
+                }
+               
+                
+            });
+            res.status(200).send(JSON.stringify({message,orders}));
+        }
+           
+            break;
+           case "Cancelled": {
+            let orders= [];
+            snapshot.forEach(docu => {
+                let orderData = docu.data();
+                if ((req.params.dop !== "null")) {
+                    if ((orderData['oDop'] >= dop) && (orderData['oDop'] < dopPlusOne)) {
+                        orders.push({orderData});
+                    }
+                }else {
+                    orders.push({orderData});
+
+                }
+                
+               
+                
+            });
+            res.status(200).send(JSON.stringify({message,orders}));
+            
+        }
+           
+               break;
+    
+        default:
+            break;
+   }
+    
+     
+ 
+    } catch (error) {
+        console.error("Error getting Orders: ", error);
+        let message = "Error getting Orders";
+        res.status(500).send(JSON.stringify({message,orders:null}));
+    }
+ 
 });
 
 

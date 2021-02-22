@@ -7,18 +7,19 @@ const admin = require('firebase-admin');
   
 router.use(cors({ origin: true }));
 
-let date_ob = new Date();
+// let date_ob = new Date();
 
-// adjust 0 before single digit date
-let date = ("0" + date_ob.getDate()).slice(-2);
+// // adjust 0 before single digit date
+// let date = ("0" + date_ob.getDate()).slice(-2);
 
-// current month
-let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
+// // current month
+// let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
 
-// current year
-let year = date_ob.getFullYear();
+// // current year
+// let year = date_ob.getFullYear();
  
-var todaysDate =  date + "-" + month + "-" + year;
+// var todaysDate =  date + "-" + month + "-" + year;
+ 
 
 
 router.put("/updateOrderStatus/:orderID/:status/:est?", async (req, res) => {
@@ -26,6 +27,9 @@ router.put("/updateOrderStatus/:orderID/:status/:est?", async (req, res) => {
     var oStatus;
     var oEstDelivaryTime;
     var t_Status;
+
+    const now = new Date()  
+const todaysDate = Math.round(now.getTime())
  
 
     switch(req.params.status) {
