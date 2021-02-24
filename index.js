@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const admin = require('firebase-admin');
 const morgan = require('morgan');
+ 
 admin.initializeApp();
  
  
@@ -13,8 +14,8 @@ var status = require('./status.js');
 var admins = require('./admins.js');
 var transactions = require('./transactions.js');
 
-
-
+ 
+  
 app.use(morgan('dev'));
 
 app.use('/api/users', users);

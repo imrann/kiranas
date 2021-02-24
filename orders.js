@@ -4,7 +4,7 @@ var router = express.Router();
 const cors = require('cors');
 const admin = require('firebase-admin');
  
-  
+   
 router.use(cors({ origin: true }));
 
 // let date_ob = new Date();
@@ -114,24 +114,7 @@ router.get('/getAllOrders', async (req, res) => {
 });
 
 
-router.get('/getOrdersByType/:userId/:type', async (req, res) => {
-     
-    try {
-        const snapshot =await admin.firestore().collection('orders').where('oUserID','==',req.params.userId).where('oStatus','==',req.params.type).orderBy('oUpdateDate','desc').get();
-        let orders = [];
-        let message = "getOrdersByType";
-          snapshot.forEach(doc => {   
-            
-            let orderData = doc.data();
-            orders.push({orderData});
-          });
-        res.status(200).send(JSON.stringify({message,orders}));
-    } catch (error) {
-        console.error("Error getting orders: ", error);
-        let message = "Error getting orders";
-        res.status(500).send(JSON.stringify({message,userData:null}));
-    }
-});
+
 
 
 
@@ -199,7 +182,7 @@ router.get("/getOrderByFilter/dop/:dop?/dod/:dod?/doc/:doc?/trackingStatus/:trac
                 break;
        }
         
-       const snapshot = await query.get();
+       const snapshot = await query.get().limit(8);
 
 
 
@@ -412,21 +395,105 @@ router.get("/getOrderByFilterByUserID/dop/:dop?/dod/:dod?/doc/:doc?/trackingStat
 });
 
 
-router.get('/getOrdersOnlyByType/:type', async (req, res) => {
+router.get('/getOrdersByType/:userId/:type', async (req, res) => {
      
     try {
-        const snapshot =await admin.firestore().collection('orders').where('oStatus','==',req.params.type).orderBy('oUpdateDate','desc').get();
+        const snapshot =await admin.firestore().collection('orders').where('oUserID','==',req.params.userId).where('oStatus','==',req.params.type).orderBy('oUpdateDate','desc').orderBy('orderID','desc').limit(8).get();
         let orders = [];
         let message = "getOrdersByType";
+        const lastOrderID = snapshot.docs[snapshot.docs.length - 1].data().orderID;
+        const lastOUpdateDate = snapshot.docs[snapshot.docs.length - 1].data().oUpdateDate;
           snapshot.forEach(doc => {   
             
             let orderData = doc.data();
             orders.push({orderData});
           });
-        res.status(200).send(JSON.stringify({message,orders}));
+        res.status(200).send(JSON.stringify({message,lastOrderID,lastOUpdateDate,orders}));
     } catch (error) {
         console.error("Error getting orders: ", error);
         let message = "Error getting orders";
+        res.status(500).send(JSON.stringify({message,userData:null}));
+    }
+});
+
+
+router.get('/getPaginatedOrdersByType/:userId/:type/:lastSnapshotOrderID/:lastSnapshotUpdateDate', async (req, res) => {
+    const startAfterOrderID = req.params.lastSnapshotOrderID;
+    const startAfterUpdateDate = parseInt(req.params.lastSnapshotUpdateDate);
+
+    try {
+        const snapshot =await admin.firestore().collection('orders').where('oUserID','==',req.params.userId).where('oStatus','==',req.params.type).orderBy('oUpdateDate','desc').orderBy('orderID','desc').startAfter(startAfterUpdateDate,startAfterOrderID).limit(8).get();
+        let orders = [];
+        let message = "getPaginatedOrdersByType";
+        let lastOrderID;
+        let lastOUpdateDate;
+        if (!snapshot.empty) {
+            lastOrderID = snapshot.docs[snapshot.docs.length - 1].data().orderID;
+        lastOUpdateDate = snapshot.docs[snapshot.docs.length - 1].data().oUpdateDate;
+      }
+          snapshot.forEach(doc => {   
+            
+            let orderData = doc.data();
+            orders.push({orderData});
+          });
+        res.status(200).send(JSON.stringify({message,lastOrderID,lastOUpdateDate,orders}));
+    } catch (error) {
+        console.error("Error getting orders: ", error);
+        let message = "Error getting orders";
+        res.status(500).send(JSON.stringify({message,userData:null}));
+    }
+});
+
+
+
+router.get('/getOrdersOnlyByType/:type', async (req, res) => {
+     
+    try {
+        const snapshot =await admin.firestore().collection('orders').where('oStatus','==',req.params.type).orderBy('oUpdateDate','desc').orderBy('orderID','desc').limit(8).get();
+        let orders = [];
+        let message = "getOrdersOnlyByType";
+        const lastOrderID = snapshot.docs[snapshot.docs.length - 1].data().orderID;
+        const lastOUpdateDate = snapshot.docs[snapshot.docs.length - 1].data().oUpdateDate;
+ 
+
+           snapshot.forEach(doc => {   
+            
+            let orderData = doc.data();
+            orders.push({orderData});
+          }); 
+          
+        res.status(200).send(JSON.stringify({message,lastOrderID,lastOUpdateDate,orders}));
+    } catch (error) {
+        console.error("Error getting orders: ", error);
+        let message = "Error getting orders";
+        res.status(500).send(JSON.stringify({message,userData:null}));
+    }
+});
+
+router.get('/getPaginatedOrdersOnlyByType/:type/:lastSnapshotOrderID/:lastSnapshotUpdateDate', async (req, res) => {
+    const startAfterOrderID = req.params.lastSnapshotOrderID;
+    const startAfterUpdateDate = parseInt(req.params.lastSnapshotUpdateDate);
+
+    try {
+        const snapshot =await admin.firestore().collection('orders').where('oStatus','==',req.params.type).orderBy('oUpdateDate','desc').orderBy('orderID','desc').startAfter(startAfterUpdateDate,startAfterOrderID).limit(8).get();
+        let orders = [];
+        let lastOrderID;
+        let lastOUpdateDate;
+        let message = "getPaginatedOrdersOnlyByType";
+        if (!snapshot.empty) {
+              lastOrderID = snapshot.docs[snapshot.docs.length - 1].data().orderID;
+          lastOUpdateDate = snapshot.docs[snapshot.docs.length - 1].data().oUpdateDate;
+        }
+        
+          snapshot.forEach(doc => {   
+            
+            let orderData = doc.data();
+            orders.push({orderData});
+          });
+        res.status(200).send(JSON.stringify({message,lastOrderID,lastOUpdateDate,orders}));
+    } catch (error) {
+        console.error("Error getting Paginated orders: ", error);
+        let message = "Error getting Paginated orders";
         res.status(500).send(JSON.stringify({message,userData:null}));
     }
 });
