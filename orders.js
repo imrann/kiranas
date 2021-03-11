@@ -182,7 +182,7 @@ router.get("/getOrderByFilter/dop/:dop?/dod/:dod?/doc/:doc?/trackingStatus/:trac
                 break;
        }
         
-       const snapshot = await query.get().limit(8);
+       const snapshot = await query.get();
 
 
 
@@ -323,10 +323,12 @@ router.get("/getOrderByFilterByUserID/dop/:dop?/dod/:dod?/doc/:doc?/trackingStat
         
        const snapshot = await query.where('oUserID', '==', req.params.userId).get();
 
-
-
+     
+     
        switch (req.params.status) {
            case "Open": {
+              
+         
             let orders= [];
             snapshot.forEach(docu => {
                  let orderData = docu.data();
@@ -401,8 +403,12 @@ router.get('/getOrdersByType/:userId/:type', async (req, res) => {
         const snapshot =await admin.firestore().collection('orders').where('oUserID','==',req.params.userId).where('oStatus','==',req.params.type).orderBy('oUpdateDate','desc').orderBy('orderID','desc').limit(8).get();
         let orders = [];
         let message = "getOrdersByType";
-        const lastOrderID = snapshot.docs[snapshot.docs.length - 1].data().orderID;
-        const lastOUpdateDate = snapshot.docs[snapshot.docs.length - 1].data().oUpdateDate;
+        let lastOrderID;
+        let lastOUpdateDate;
+        if (!snapshot.empty) {
+            lastOrderID = snapshot.docs[snapshot.docs.length - 1].data().orderID;
+        lastOUpdateDate = snapshot.docs[snapshot.docs.length - 1].data().oUpdateDate;
+      }
           snapshot.forEach(doc => {   
             
             let orderData = doc.data();
@@ -452,8 +458,12 @@ router.get('/getOrdersOnlyByType/:type', async (req, res) => {
         const snapshot =await admin.firestore().collection('orders').where('oStatus','==',req.params.type).orderBy('oUpdateDate','desc').orderBy('orderID','desc').limit(8).get();
         let orders = [];
         let message = "getOrdersOnlyByType";
-        const lastOrderID = snapshot.docs[snapshot.docs.length - 1].data().orderID;
-        const lastOUpdateDate = snapshot.docs[snapshot.docs.length - 1].data().oUpdateDate;
+        let lastOrderID;
+        let lastOUpdateDate;
+        if (!snapshot.empty) {
+            lastOrderID = snapshot.docs[snapshot.docs.length - 1].data().orderID;
+        lastOUpdateDate = snapshot.docs[snapshot.docs.length - 1].data().oUpdateDate;
+      }
  
 
            snapshot.forEach(doc => {   

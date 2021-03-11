@@ -1,11 +1,13 @@
 const functions = require("firebase-functions");
 const express = require('express');
 const app = express();
+const cors = require('cors');
 const admin = require('firebase-admin');
 const morgan = require('morgan');
  
 admin.initializeApp();
  
+
  
 var users = require('./users.js');
 var products = require('./products.js');
@@ -15,7 +17,7 @@ var admins = require('./admins.js');
 var transactions = require('./transactions.js');
 
  
-  
+app.use(cors({ origin: true }));  
 app.use(morgan('dev'));
 
 app.use('/api/users', users);
