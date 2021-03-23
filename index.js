@@ -9,12 +9,12 @@ admin.initializeApp();
  
 
  
-var users = require('./users.js');
-var products = require('./products.js');
-var orders = require('./orders.js');
-var status = require('./status.js');
-var admins = require('./admins.js');
-var transactions = require('./transactions.js');
+var users = require('./routes/users.js');
+var products = require('./routes/products.js');
+var orders = require('./routes/orders.js');
+var status = require('./routes/status.js');
+var admins = require('./routes/admins.js');
+var transactions = require('./routes/transactions.js');
 
  
 app.use(cors({ origin: true }));  

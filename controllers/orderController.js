@@ -1,30 +1,9 @@
-const functions = require('firebase-functions');
-const express = require('express');
-var router = express.Router();
-const cors = require('cors');
+ 
 const admin = require('firebase-admin');
- 
-   
-router.use(cors({ origin: true }));
 
-// let date_ob = new Date();
 
-// // adjust 0 before single digit date
-// let date = ("0" + date_ob.getDate()).slice(-2);
 
-// // current month
-// let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
-
-// // current year
-// let year = date_ob.getFullYear();
- 
-// var todaysDate =  date + "-" + month + "-" + year;
-
- 
-//create a new order and transaction
-//http://localhost:5001/kiranas-c082f/us-central1/kiranas/api/orders/createOrder/<transactionMode>
-
-router.post('/createOrder/:transactionMode', async (req, res) => {
+exports.createOrder = async (req, res) => {
     const order = req.body;
     const orderProd = req.body['oProducts'];
     const now = new Date()  
@@ -61,47 +40,11 @@ router.post('/createOrder/:transactionMode', async (req, res) => {
 
 }
   
-    
-
      
- 
-    //       admin.firestore().collection('orders').add(order).then(function(docRef) {
-           
-    //            docRef.get().then(function(getData) {
-    //               admin.firestore().collection('transactions').add(
-    //                 {
-    //                     "t_Date": getData.data()['o_Dop'],
-    //                     "t_Mode" : req.params.transactionMode,
-    //                     "t_OrderID" :docRef.id ,
-    //                     "t_Party" :  getData.data()['o_UserName'] + "("+getData.data()['o_UserPhone']+")",
-    //                     "t_Status" : "Pending",
-    //                      "t_TransactionAction": "Creadited",
-    //                      "t_BillAmt": getData.data()['o_BillTotal']['totalAmt'],
-    //                      "t_CreationDate":getData.data()['o_Dop'],
-    //                     "t_UpdationDate": getData.data()['o_Dop']
-    //                 }
-    //             );
-    //             res.status(201).send();
-    //          }).catch(function(error) {
-    //             console.error("Error adding document: ", error);
-    //             res.status(500).send();
-    //       });
-           
-         
-    //     res.status(201).send();
 
+}
 
-    //   }).catch(function(error) {
-    //       console.error("Error adding document: ", error);
-    //       res.status(500).send();
-    // });
-
-});
-
-//get All orders
-//http://localhost:5001/kiranas-c082f/us-central1/kiranas/api/orders/getAllOrders
-
-router.get('/getAllOrders', async (req, res) => {
+exports.getAllOrders = async (req, res) => {
     const order = req.body;
       await admin.firestore().collection('orders').add(order);
       let orders = [];
@@ -111,14 +54,9 @@ router.get('/getAllOrders', async (req, res) => {
         orders.push({userID,userData});
       });
       res.status(200).send(JSON.stringify(orders));
-});
+}
 
-
-
-
-
-
-router.get("/getOrderByFilter/dop/:dop?/dod/:dod?/doc/:doc?/trackingStatus/:trackingStatus?/status/:status", async (req, res) => { 
+exports.getOrderByFilter = async (req, res) => { 
 
     var dop = parseInt(req.params.dop);
     var dopPlusOne = parseInt(req.params.dop) + 86400000;
@@ -254,10 +192,9 @@ router.get("/getOrderByFilter/dop/:dop?/dod/:dod?/doc/:doc?/trackingStatus/:trac
     }
  
  
-});
+}
 
-
-router.get("/getOrderByFilterByUserID/dop/:dop?/dod/:dod?/doc/:doc?/trackingStatus/:trackingStatus?/status/:status/userId/:userId", async (req, res) => { 
+exports.getOrderByFilterByUserID = async (req, res) => { 
  
     var dop = parseInt(req.params.dop);
     var dopPlusOne = parseInt(req.params.dop) + 86400000;
@@ -394,10 +331,9 @@ router.get("/getOrderByFilterByUserID/dop/:dop?/dod/:dod?/doc/:doc?/trackingStat
         res.status(500).send(JSON.stringify({message,orders:null}));
     }
  
-});
+}
 
-
-router.get('/getOrdersByType/:userId/:type', async (req, res) => {
+exports.getOrdersByType = async (req, res) => {
      
     try {
         const snapshot =await admin.firestore().collection('orders').where('oUserID','==',req.params.userId).where('oStatus','==',req.params.type).orderBy('oUpdateDate','desc').orderBy('orderID','desc').limit(8).get();
@@ -420,10 +356,9 @@ router.get('/getOrdersByType/:userId/:type', async (req, res) => {
         let message = "Error getting orders";
         res.status(500).send(JSON.stringify({message,userData:null}));
     }
-});
+}
 
-
-router.get('/getPaginatedOrdersByType/:userId/:type/:lastSnapshotOrderID/:lastSnapshotUpdateDate', async (req, res) => {
+exports.getPaginatedOrdersByType = async (req, res) => {
     const startAfterOrderID = req.params.lastSnapshotOrderID;
     const startAfterUpdateDate = parseInt(req.params.lastSnapshotUpdateDate);
 
@@ -448,11 +383,9 @@ router.get('/getPaginatedOrdersByType/:userId/:type/:lastSnapshotOrderID/:lastSn
         let message = "Error getting orders";
         res.status(500).send(JSON.stringify({message,userData:null}));
     }
-});
+}
 
-
-
-router.get('/getOrdersOnlyByType/:type', async (req, res) => {
+exports.getOrdersOnlyByType = async (req, res) => {
      
     try {
         const snapshot =await admin.firestore().collection('orders').where('oStatus','==',req.params.type).orderBy('oUpdateDate','desc').orderBy('orderID','desc').limit(8).get();
@@ -478,9 +411,9 @@ router.get('/getOrdersOnlyByType/:type', async (req, res) => {
         let message = "Error getting orders";
         res.status(500).send(JSON.stringify({message,userData:null}));
     }
-});
+}
 
-router.get('/getPaginatedOrdersOnlyByType/:type/:lastSnapshotOrderID/:lastSnapshotUpdateDate', async (req, res) => {
+exports.getPaginatedOrdersOnlyByType = async (req, res) => {
     const startAfterOrderID = req.params.lastSnapshotOrderID;
     const startAfterUpdateDate = parseInt(req.params.lastSnapshotUpdateDate);
 
@@ -506,7 +439,26 @@ router.get('/getPaginatedOrdersOnlyByType/:type/:lastSnapshotOrderID/:lastSnapsh
         let message = "Error getting Paginated orders";
         res.status(500).send(JSON.stringify({message,userData:null}));
     }
-});
- 
+}
 
-module.exports = router;
+exports.getTotalOrdersByType = async (req, res) => {
+     
+    try {
+        const snapshot =await admin.firestore().collection('orders').where('oStatus','==',req.params.type).get();
+        let orders = [];
+        let message = "getTotalOrdersByType";
+ 
+           snapshot.forEach(doc => {   
+            
+            let orderData = doc.data();
+            orders.push({orderData});
+           });
+        let ordersLength = orders.length;
+          
+        res.status(200).send(JSON.stringify({message,ordersLength}));
+    } catch (error) {
+        console.error("Error getting orders: ", error);
+        let message = "Error getting orders";
+        res.status(500).send(JSON.stringify({message,ordersLength:null}));
+    }
+}

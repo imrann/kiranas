@@ -1,16 +1,8 @@
-const functions = require('firebase-functions');
-const express = require('express');
-var router = express.Router();
-const cors = require('cors');
+ 
 const admin = require('firebase-admin');
- 
-  
-router.use(cors({ origin: true }));
- 
-//get All Users
-//http://localhost:5001/kiranas-c082f/us-central1/user
 
-router.get('/getAllUsers', async (req, res) => {
+
+exports.getAllUsers = async (req, res) => {
     const snapshot = await admin.firestore().collection('users').get();
     let users = [];
     snapshot.forEach(doc => {   
@@ -19,12 +11,9 @@ router.get('/getAllUsers', async (req, res) => {
       users.push({userID,userData});
     });
     res.status(200).send(JSON.stringify(users));
-});
-  
-//get users by userID
-//http://localhost:5001/kiranas-c082f/us-central1/user/<userID>
+}
 
-router.get("/getUserById/:id", async (req, res) => {
+exports.getUserById = async (req, res) => {
     try {
         const snapshot = await
         admin.firestore().collection('users').doc(req.params.id).get();
@@ -38,11 +27,9 @@ router.get("/getUserById/:id", async (req, res) => {
         res.status(500).send(JSON.stringify({message,userData:null}));
     }
    
-})
+}
 
-//check if user is admin
-
-router.get("/isUserAdmin/:phoneNumber", async (req, res) => {
+exports.isUserAdmin = async (req, res) => {
     let message;
     let adminUserData;
     let admins = [];
@@ -71,14 +58,9 @@ router.get("/isUserAdmin/:phoneNumber", async (req, res) => {
         res.status(500).send(JSON.stringify({message,adminUserData:null}));
     }
    
-})
+}
 
-
-  
-//create a new user
-//http://localhost:5001/kiranas-c082f/us-central1/user
-
-router.post('/createUser/:userID', async (req, res) => {
+exports.createUser =  async (req, res) => {
     const user = req.body;
     try {
         await admin.firestore().collection('users').doc(req.params.userID).set(user);
@@ -90,11 +72,9 @@ router.post('/createUser/:userID', async (req, res) => {
         res.status(500).send(JSON.stringify({message,userData:null}));
   }
     
-});
+}
 
-
-//save device token forn FCM
-router.post('/saveDeviceToken/:tokenCategory', async (req, res) => {
+exports.saveDeviceToken = async (req, res) => {
     const tokenDetails = req.body;
 
     try {
@@ -107,9 +87,9 @@ router.post('/saveDeviceToken/:tokenCategory', async (req, res) => {
         res.status(500).send(JSON.stringify({message}));
   }
     
-});
+}
 
-router.get('/getDeviceToken/:userID', async (req, res) => {
+exports.getDeviceToken = async (req, res) => {
      
     try {
         const snapshot=  await admin.firestore().collection('deviceTokens').where('tokenDetails.userID', '==', req.params.userID).get();
@@ -127,12 +107,9 @@ router.get('/getDeviceToken/:userID', async (req, res) => {
         res.status(500).send(JSON.stringify({message,token:null}));
   }
     
-});
-  
-//check if user already present in the system
-//http://localhost:5001/kiranas-c082f/us-central1/user/isUserPresent/<userPhoneNumber>
+}
 
-router.get("/isUserPresent/:userPhoneNumber", async (req, res) => {
+exports.isUserPresent = async (req, res) => {
 
     const snapshot= await
         admin.firestore().collection('users').where('userPhone', '==', req.params.userPhoneNumber).get();
@@ -151,12 +128,9 @@ router.get("/isUserPresent/:userPhoneNumber", async (req, res) => {
         res.status(200).send(JSON.stringify({ isUserPresent:true}));
     }
  
-});
+}
 
-//update user address by userID
-//http://localhost:5001/kiranas-c082f/us-central1/user/updateAddressByUserID/<userID>
-
-router.put("/updateAddress/:id", async (req, res) => {
+exports.updateAddress =  async (req, res) => {
     const body = req.body;
 
     try {
@@ -171,9 +145,4 @@ router.put("/updateAddress/:id", async (req, res) => {
   }
     
     res.status(200).send();
-  });
-
-  
-module.exports = router;
-
- 
+  }

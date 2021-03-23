@@ -1,20 +1,45 @@
-const functions = require('firebase-functions');
-const express = require('express');
-var router = express.Router();
-const cors = require('cors');
+ 
 const admin = require('firebase-admin');
- 
- 
-  
-router.use(cors({ origin: true }));
 
- 
- 
+exports.getAllProducts =  async (req, res) => {
+    try {
+        const snapshot = await admin.firestore().collection('products').get();
+        let products = [];
+        let message = "getAllProducts";
+
+        snapshot.forEach(doc => {   
+          let productID = doc.id;
+          let productData = doc.data();
+          products.push({productID,productData});
+        });
+        res.status(200).send(JSON.stringify({message,result:products}));
+    } catch (error) {
+        console.error("Error getting User: ", error);
+        let message = "Error getting Products";
+        res.status(500).send(JSON.stringify({message,result:null}));
+    }
   
-//create a new product
-//http://localhost:5001/kiranas-c082f/us-central1/kiranas/api/products/createProduct
- 
-router.post('/createProduct', async (req, res) => {
+}
+
+exports.updateProduct = async (req, res) => {
+
+
+    const body = req.body; 
+    
+
+    try {
+        await 
+        admin.firestore().collection('products').doc(req.params.id).set(body,{merge:true});
+        res.status(201).send();
+    } catch (error) {
+        console.error("Error adding product: ", error);
+
+        res.status(500).send();
+
+    }
+}
+
+exports.createProduct = async (req, res) => {
 
     const product = req.body; 
     
@@ -34,35 +59,9 @@ router.post('/createProduct', async (req, res) => {
     
 
     
-});
+}
 
-//get All Products
-//http://localhost:5001/kiranas-c082f/us-central1/kiranas/api/products/getAllProducts
-
-router.get('/getAllProducts', async (req, res) => {
-    try {
-        const snapshot = await admin.firestore().collection('products').get();
-        let products = [];
-        let message = "getAllProducts";
-
-        snapshot.forEach(doc => {   
-          let productID = doc.id;
-          let productData = doc.data();
-          products.push({productID,productData});
-        });
-        res.status(200).send(JSON.stringify({message,result:products}));
-    } catch (error) {
-        console.error("Error getting User: ", error);
-        let message = "Error getting Products";
-        res.status(500).send(JSON.stringify({message,result:null}));
-    }
-  
-});
-
-//discontinue or continue products
-//http://localhost:5001/kiranas-c082f/us-central1/kiranas/api/products/deleteProduct/<productID>
-
-router.put("/deleteProduct/:id", async (req, res) => {
+exports.deleteProduct = async (req, res) => {
     const actionOnProduct = req.body["discontinue"];
 
     try {
@@ -80,31 +79,9 @@ router.put("/deleteProduct/:id", async (req, res) => {
    
 
   
-});
-  
-//upfate product by productID
-//http://localhost:5001/kiranas-c082f/us-central1/kiranas/api/products/updateProduct/<productID>
-router.put("/updateProduct/:id", async (req, res) => {
+}
 
-
-    const body = req.body; 
-    
-
-    try {
-        await 
-        admin.firestore().collection('products').doc(req.params.id).set(body,{merge:true});
-        res.status(201).send();
-    } catch (error) {
-        console.error("Error adding product: ", error);
-
-        res.status(500).send();
-
-    }
-});
-
-
-//getProductByID
-router.get("/getProductByID/:productID", async (req, res) => {
+exports.getProductByID = async (req, res) => {
  
 
     try {
@@ -122,15 +99,10 @@ router.get("/getProductByID/:productID", async (req, res) => {
         let message = "Error getting product";
         res.status(500).send(JSON.stringify({message,result:null}));
     }
-
-
-    
    
-});
-  
+}
 
-
-router.get("/getProductByName/:productName/:productLimit", async (req, res) => {
+exports.getProductByName = async (req, res) => {
  
     try {
         const snapshot = await
@@ -150,18 +122,9 @@ router.get("/getProductByName/:productName/:productLimit", async (req, res) => {
         res.status(500).send(JSON.stringify({message,result:null}));
     }
    
-});
+}
 
-
-
-
-
-  
- 
-  //categoryFilterName
-  //http://localhost:5001/kiranas-c082f/us-central1/kiranas/api/products/getAllproductCategory
-
-router.get("/getAllproductCategory/:categoryFilterName", async (req, res) => {
+exports.getAllproductCategory = async (req, res) => {
     try {       
     let message = "success getting productFilterList";
     const snapshot = await
@@ -177,23 +140,17 @@ router.get("/getAllproductCategory/:categoryFilterName", async (req, res) => {
         res.status(500).send(JSON.stringify({message,productFilterList:null}));
     }
 
-});
+}
 
-//update product category
-//http://localhost:5001/kiranas-c082f/us-central1/kiranas/api/products/updateProductCategory/<productCategory>
-
-router.put("/updateProductCategory/:productCategory", async (req, res) => {
+exports.updateProductCategory = async (req, res) => {
     await
         admin.firestore().collection('productCategory').doc('productCategoryList').update({
             productCategoryList : admin.firestore.FieldValue.arrayUnion(req.params.productCategory)
         });
     res.status(200).send();
-});
+}
 
-
-//get product by productCategory
-//http://localhost:5001/kiranas-c082f/us-central1/kiranas/api/products/updateProductCategory/<productCategory>
-router.get("/getProductByCategory/:productCategory?/:productDiscount?", async (req, res) => { 
+exports.getProductByCategory = async (req, res) => { 
  
    
 
@@ -235,13 +192,4 @@ router.get("/getProductByCategory/:productCategory?/:productDiscount?", async (r
         res.status(500).send(JSON.stringify({message,result:null}));
     }
  
-});
-
-
-
-
-
-  
-module.exports = router;
-
- 
+}
