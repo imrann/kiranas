@@ -3,7 +3,7 @@ const admin = require('firebase-admin');
 
 exports.getAllProducts =  async (req, res) => {
     try {
-        const snapshot = await admin.firestore().collection('products').get();
+        const snapshot = await admin.firestore().collection('products').orderBy('productName').get();
         let products = [];
         let message = "getAllProducts";
 
